@@ -18,6 +18,9 @@ class Application(Frame):
         self.points = []
         self.undo_stack = []
         self.redo_stack = []
+        self.action_undo_stack = []
+        self.action_redo_stack = []
+        self.current_actions = []
         self.image = None
         self.open_button = Button(text="Open your image", height=2, command=self.open_image)
         self.open_button.pack(anchor='nw', padx=20, pady=20)
@@ -50,35 +53,101 @@ class Application(Frame):
             self.resized_image = self.image.resize((1000, 600))
             self.image_tk = ImageTk.PhotoImage(self.resized_image)
             self.canvas.create_image(self.canvas.winfo_width()/2, self.canvas.winfo_height()/2, image=self.image_tk)
-            self.undo_stack.append(self.image.copy() if self.image else None)
+            self.undo_stack.append((self.image.copy() if self.image else None,[]))
             self.redo_stack.clear()
 
     def undo(self): # отмена последнего фона
         if self.undo_stack:
-            self.redo_stack.append(self.image.copy() if self.image else None)
-            self.image = self.undo_stack.pop()
-            if self.image:
-                self.resized_image = self.image.resize((1000, 600))
-                self.image_tk = ImageTk.PhotoImage(self.resized_image)
-                self.canvas.create_image(self.canvas.winfo_width() / 2, self.canvas.winfo_height() / 2,
-                                         image=self.image_tk)
-            else:
-                self.canvas.delete("all")
+            self.redo_stack.append((self.undo_stack[-1][0].copy(),self.undo_stack[-1][1]))
+            self.undo_stack.pop()
+            self.image, self.current_actions = self.undo_stack[-1]
+            if not(self.undo_stack):
+                self.undo_stack.append((self.image.copy(),[]))
+            self.update_undo_canvas()
 
     def redo(self): # возврат прошлого выбранного фона
         if self.redo_stack:
-            self.undo_stack.append(self.image.copy() if self.image else None)
-            self.image = self.redo_stack.pop()
-            if self.image:
-                self.resized_image = self.image.resize((1000, 600))
-                self.image_tk = ImageTk.PhotoImage(self.resized_image)
-                self.canvas.create_image(self.canvas.winfo_width()/2, self.canvas.winfo_height()/2,
-                                         image=self.image_tk)
-            else:
-                self.canvas.delete("all")
+            self.undo_stack.append((self.redo_stack[-1][0].copy(), self.redo_stack[-1][1]))
+            self.image, self.current_actions = self.redo_stack.pop()
+            self.update_redo_canvas()
+    def update_undo_canvas(self):
+        self.canvas.delete("all")
+        if self.image:
+            self.resized_image = self.image.resize((1000, 600))
+            self.image_tk = ImageTk.PhotoImage(self.resized_image)
+            self.canvas.create_image(self.canvas.winfo_width() / 2, self.canvas.winfo_height() / 2, image=self.image_tk)
+        if self.undo_stack:
+            for entry in self.undo_stack:
+                if len(entry[1])!=0:
+                    type = entry[1][0]
+                    if (type == "text"):
+                        type, x, y, text, text_color, text_size = entry[1]
+                        self.canvas.create_text(x, y, text=text, fill=text_color, font=("Arial", text_size))
+                    elif (type == "line"):
+                        type, start_x,start_y, end_x, end_y, line_color, line_size = entry[1]
+                        self.canvas.create_line(start_x,start_y,end_x,end_y, fill = line_color, width=line_size)
+                    elif (type=="shape"):
+                        shape_type = entry[1][1]
+                        if (shape_type=="rectangle"):
+                            type, shape_type, start_x,start_y, end_x, end_y, shape_color, shape_size = entry[1]
+                            self.canvas.create_rectangle(start_x,start_y,end_x,end_y,fill = shape_color, width=shape_size)
+                        if (shape_type=="circle"):
+                            type, shape_type, start_x,start_y, end_x, end_y, shape_color, shape_size = entry[1]
+                            self.canvas.create_oval(start_x,start_y,end_x,end_y, fill =shape_color, width=shape_size)
+                        if (shape_type=="triangle"):
+                            type, shape_type, x1,y1,x2,y2,x3,y3,shape_color = entry[1]
+                            self.canvas.create_polygon(x1,y1,x2,y2,x3,y3, fill=shape_color)
+    def update_redo_canvas(self):
+        self.canvas.delete("all")
+        if self.image:
+            self.resized_image = self.image.resize((1000, 600))
+            self.image_tk = ImageTk.PhotoImage(self.resized_image)
+            self.canvas.create_image(self.canvas.winfo_width() / 2, self.canvas.winfo_height() / 2, image=self.image_tk)
+        if self.undo_stack:
+            for entry in self.undo_stack:
+                if len(entry[1]) != 0:
+                    type = entry[1][0]
+                    if (type == "text"):
+                        type, x, y, text, text_color, text_size = entry[1]
+                        self.canvas.create_text(x, y, text=text, fill=text_color, font=("Arial", text_size))
+                    elif (type == "line"):
+                        type, start_x, start_y, end_x, end_y, line_color, line_size = entry[1]
+                        self.canvas.create_line(start_x, start_y, end_x, end_y, fill=line_color, width=line_size)
+                    elif (type == "shape"):
+                        shape_type = entry[1][1]
+                        if (shape_type == "rectangle"):
+                            type, shape_type, start_x, start_y, end_x, end_y, shape_color, shape_size = entry[1]
+                            self.canvas.create_rectangle(start_x, start_y, end_x, end_y, fill=shape_color,
+                                                         width=shape_size)
+                        if (shape_type == "circle"):
+                            type, shape_type, start_x, start_y, end_x, end_y, shape_color, shape_size = entry[1]
+                            self.canvas.create_oval(start_x, start_y, end_x, end_y, fill=shape_color, width=shape_size)
+                        if (shape_type == "triangle"):
+                            type, shape_type, x1, y1, x2, y2, x3, y3, shape_color = entry[1]
+                            self.canvas.create_polygon(x1, y1, x2, y2, x3, y3, fill=shape_color)
+        if self.current_actions:
+            type = self.current_actions[0]
+            if (type == "text"):
+                type, x, y, text, text_color, text_size = self.current_actions
+                self.canvas.create_text(x, y, text=text, fill=text_color, font=("Arial", text_size))
+            elif (type == "line"):
+                type, start_x, start_y, end_x, end_y, line_color, line_size = self.current_actions
+                self.canvas.create_line(start_x, start_y, end_x, end_y, fill=line_color, width=line_size)
+            elif (type == "shape"):
+                shape_type = self.current_actions[1]
+                if (shape_type == "rectangle"):
+                    type, shape_type, start_x, start_y, end_x, end_y, shape_color, shape_size = self.current_actions
+                    self.canvas.create_rectangle(start_x, start_y, end_x, end_y, fill=shape_color,
+                                                 width=shape_size)
+                if (shape_type == "circle"):
+                    type, shape_type, start_x, start_y, end_x, end_y, shape_color, shape_size = self.current_actions
+                    self.canvas.create_oval(start_x, start_y, end_x, end_y, fill=shape_color, width=shape_size)
+                if (shape_type == "triangle"):
+                    type, shape_type, x1, y1, x2, y2, x3, y3, shape_color = self.current_actions
+                    self.canvas.create_polygon(x1, y1, x2, y2, x3, y3, fill=shape_color)
     def set_image_bg(self): # установка заднего фона
         if self.image:
-            self.undo_stack.append(self.image.copy())
+            self.undo_stack.clear()
             self.redo_stack.clear()
             self.image = Image.alpha_composite(self.image, Image.new("RGBA", self.image.size,
                                                                      self.bg_color_dict[str(self.bg_color.get())]))
@@ -86,7 +155,7 @@ class Application(Frame):
             self.image_tk = ImageTk.PhotoImage(self.resized_image)
             self.canvas.create_image(self.canvas.winfo_width() / 2, self.canvas.winfo_height() / 2,
                                      image=self.image_tk)
-            self.bg_window.destroy()
+            self.undo_stack.append((self.image.copy(),()))
     def config_image_bg(self): # выбор заднего фона
         if self.image:
             self.bg_color_dict = {"black": (0,0,0,128),"white":(255,255,255,128),"red":(255,0,0,128), "blue":(0,0,255,128),"green":(0,255,0,128)}
@@ -149,6 +218,9 @@ class Application(Frame):
     def end_draw_line(self, event): # конец линии
         line_color = str(self.line_color.get())
         line_size = int(self.line_size.get())
+        self.current_actions = ("line", self.start_x,self.start_y,event.x,event.y, line_color, line_size)
+        self.undo_stack.append((self.image.copy(),self.current_actions))
+        self.redo_stack.clear()
         self.canvas.create_line(self.start_x, self.start_y, event.x, event.y, fill=line_color, width=line_size)
 
     def write_text(self, event): #
@@ -181,6 +253,9 @@ class Application(Frame):
         x, y = event.x, event.y
         text_color = str(self.text_color.get())
         text_size = int(self.text_size.get())
+        self.current_actions = ("text",x,y, text, text_color, text_size)
+        self.undo_stack.append((self.image.copy(), self.current_actions))
+        self.redo_stack.clear()
         self.canvas.create_text(x, y, text=text, fill=text_color, font=("Arial", text_size))
         self.text_window.destroy()
         self.canvas.bind("<Button-1>", self.write_text)
@@ -226,11 +301,17 @@ class Application(Frame):
         if str(self.shape.get()) == "rectangle":
             self.canvas.bind("<Button-1>", self.start_shape)
             self.points = []
+            self.current_actions = ("shape","rectangle", self.start_x, self.start_y, event.x, event.y, str(self.shape_color.get()),int(self.shape_width.get()))
+            self.undo_stack.append((self.image.copy(),self.current_actions))
+            self.redo_stack.clear()
             self.canvas.create_rectangle(self.start_x, self.start_y, event.x, event.y, fill=str(self.shape_color.get()),
                                          width=int(self.shape_width.get()))
         elif str(self.shape.get()) == "circle":
             self.canvas.bind("<Button-1>", self.start_shape)
             self.points = []
+            self.current_actions=("shape","circle", self.start_x,self.start_y,event.x,event.y, str(self.shape_color.get()), int(self.shape_width.get()))
+            self.undo_stack.append((self.image.copy(), self.current_actions))
+            self.redo_stack.clear()
             self.canvas.create_oval(self.start_x, self.start_y, event.x, event.y, fill=str(self.shape_color.get()),
                                     width=int(self.shape_width.get()))
         elif str(self.shape.get()) == "triangle":
@@ -238,6 +319,9 @@ class Application(Frame):
             if (len(self.points) == 0): self.points.append((event.x, event.y))
             self.canvas.bind("<Button-1>", self.get_triangle_points)
             if (len(self.points) == 3):
+                self.current_actions = ("shape","triangle", self.points[0][0],self.points[0][1],self.points[1][0],self.points[1][1],self.points[2][0],self.points[2][1], str(self.shape_color.get()))
+                self.undo_stack.append((self.image.copy(), self.current_actions))
+                self.redo_stack.clear()
                 self.canvas.create_polygon(self.points[0], self.points[1], self.points[2],
                                            fill=str(self.shape_color.get()))
                 self.points = []
@@ -251,3 +335,4 @@ if __name__ == '__main__':
     root = Tk()
     app = Application(root)
     app.mainloop()
+
