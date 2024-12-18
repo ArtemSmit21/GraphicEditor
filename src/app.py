@@ -29,7 +29,7 @@ class Application(Frame, BasicFunctions):
         self.action_redo_stack = []
         self.current_actions = []
 
-        open_icon = ImageTk.PhotoImage(file="buttons/open.png")
+        open_icon = ImageTk.PhotoImage(file="..buttons/open.png")
         self.open_button = Button(self.parent, image=open_icon, height=48, command=self.open_image)
         self.open_button.image = open_icon
         self.open_button.pack(anchor='nw', padx=20, pady=20)
@@ -37,43 +37,43 @@ class Application(Frame, BasicFunctions):
         self.canvas = Canvas(self.parent, bg='white', height=250, width=250)
         self.canvas.pack(fill=BOTH, expand=1, padx=20, pady=20)
 
-        add_text_icon = ImageTk.PhotoImage(file="buttons/add_text.png")
+        add_text_icon = ImageTk.PhotoImage(file="..buttons/add_text.png")
         self.add_text_button = Button(self.parent, image=add_text_icon, command=self.add_text,
                                       bg='white')
         self.add_text_button.image = add_text_icon
         self.add_text_button.pack(side=LEFT, padx=20)
 
-        add_line_icon = ImageTk.PhotoImage(file="buttons/line.png")
+        add_line_icon = ImageTk.PhotoImage(file="..buttons/line.png")
         self.add_line_button = Button(self.parent, image=add_line_icon, command=self.add_line,
                                       bg='white')
         self.add_line_button.image = add_line_icon
         self.add_line_button.pack(side=LEFT, padx=20)
 
-        add_shape_icon = ImageTk.PhotoImage(file="buttons/shape.png")
+        add_shape_icon = ImageTk.PhotoImage(file="..buttons/shape.png")
         self.add_shape_button = Button(self.parent, image=add_shape_icon, command=self.add_shape,
                                        bg='white')
         self.add_shape_button.image = add_shape_icon
         self.add_shape_button.pack(side=LEFT, padx=20)
 
-        undo_icon = ImageTk.PhotoImage(file="buttons/undo.png")
+        undo_icon = ImageTk.PhotoImage(file="..buttons/undo.png")
         self.undo_button = Button(self.parent, image=undo_icon, command=self.undo,
                                   bg='white')
         self.undo_button.image = undo_icon
         self.undo_button.pack(side=LEFT, padx=20)
 
-        redo_icon = ImageTk.PhotoImage(file="buttons/redo.png")
+        redo_icon = ImageTk.PhotoImage(file="..buttons/redo.png")
         self.redo_button = Button(self.parent, image=redo_icon, command=self.redo,
                                   bg='white')
         self.redo_button.image = redo_icon
         self.redo_button.pack(side=LEFT, padx=20)
 
-        back_icon = ImageTk.PhotoImage(file="buttons/back.png")
+        back_icon = ImageTk.PhotoImage(file="..buttons/back.png")
         self.set_image_background = Button(self.parent, image=back_icon, command=self.config_image_bg,
                                            bg='white')
         self.set_image_background.image = back_icon
         self.set_image_background.pack(side=LEFT, padx=20, pady=5)
 
-        save_icon = ImageTk.PhotoImage(file="buttons/save.png")
+        save_icon = ImageTk.PhotoImage(file="..buttons/save.png")
         self.save_button = Button(self.parent, image=save_icon, command=self.save_file, bg='white')
         self.save_button.image = save_icon
         self.save_button.pack(side=LEFT, padx=20, pady=5)
