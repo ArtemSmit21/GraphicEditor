@@ -1,4 +1,4 @@
-# GraphicEditor(Pyhton, Pillow, Tkinter)
+# GraphicEditor(Python, Pillow, Tkinter)
 
 ## Графический редактор на Python, Pillow и Tkinter
 
